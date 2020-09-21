@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/FTChinese.com/iap-polling/pkg/config"
 	"log"
 	"time"
 
@@ -10,7 +11,7 @@ import (
 )
 
 func consume() {
-	conn, err := kafka.DialLeader(context.Background(), "tcp", "localhost:9092", topic, partition)
+	conn, err := kafka.DialLeader(context.Background(), "tcp", "localhost:9092", config.Topic, config.Partition)
 
 	if err != nil {
 		log.Fatal("failed to dial leader:", err)
