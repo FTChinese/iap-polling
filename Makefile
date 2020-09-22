@@ -1,69 +1,38 @@
 build_dir := build
-config_file := api.toml
-BINARY := subscription-api
+producer_name := iap-polling-produer
+consumer_name := iap-polling-consumer
 
-DEV_OUT := $(build_dir)/$(BINARY)
-LINUX_OUT := $(build_dir)/linux/$(BINARY)
+producer_dev_out := $(build_dir)/$(producer_name)
+producer_prod_out := $(build_dir)/linux/$(producer_name)
 
-LOCAL_CONFIG_FILE := $(HOME)/config/$(config_file)
+consumer_dev_out := $(build_dir)/$(consumer_name)
+consumer_prod_out := $(build_dir)/linux/$(consumer_name)
 
-VERSION := `git describe --tags`
-BUILD := `date +%FT%T%z`
-COMMIT := `git log --max-count=1 --pretty=format:%aI_%h`
+version := `git describe --tags`
+build_time := `date +%FT%T%z`
 
-LDFLAGS := -ldflags "-w -s -X main.version=${VERSION} -X main.build=${BUILD} -X main.commit=${COMMIT}"
+ldflags := -ldflags "-w -s -X main.version=${version} -X main.build=${build_time}"
 
-BUILD_LINUX := GOOS=linux GOARCH=amd64 go build -o $(LINUX_OUT) $(LDFLAGS) -tags production -v .
+linux_producer := GOOS=linux GOARCH=amd64 go build -o $(producer_prod_out) $(ldflags) -v ./cmd/producer/
+linux_consumer := GOOS=linux GOARCH=amd64 go build -o $(consumer_prod_out) $(ldflags) -v ./cmd/consumer/
 
-.PHONY: local run linux config deploy build downconfig upconfig publish restart clean
+.PHONY: build producer consumer linux clean
 # Development
-local :
-	go build $(LDFLAGS) -o $(DEV_OUT) -v .
+build :
+	go build -o $(producer_dev_out) $(ldflags) -v ./cmd/producer/
+	go build -o $(consumer_dev_out) $(ldflags) -v ./cmd/consumer/
 
 # Run development build
-run :
-	./$(DEV_OUT) -sandbox
+producer :
+	./$(producer_dev_out)
+
+consumer :
+	./$(consumer_dev_out)
 
 # Cross compiling linux on for dev.
 linux :
-	echo 'Build production version'
-	$(BUILD_LINUX)
-
-version :
-	echo $(VERSION)
-
-# From local machine to production server
-# Copy env varaible to server
-config :
-	rsync -v $(LOCAL_CONFIG_FILE) tk11:/home/node/config
-
-deploy : version
-	rsync -v $(LINUX_OUT) tk11:/home/node/go/bin/
-	ssh tk11 supervisorctl restart $(BINARY)
-
-# For CI/CD
-build :
-	gvm install go1.15
-	gvm use go1.15
-	echo $(VERSION)
-	$(BUILD_LINUX)
-
-downconfig :
-	rsync -v tk11:/home/node/config/$(config_file) ./$(build_dir)
-
-# Publish artifacts.
-upconfig :
-	rsync -v ./$(build_dir)/$(config_file) ucloud:/home/node/config
-
-publish : version
-	ssh ucloud "rm -f /home/node/go/bin/$(BINARY).bak"
-	rsync -v $(LINUX_OUT) bj32:/home/node
-	ssh bj32 "rsync -v /home/node/$(BINARY) ucloud:/home/node/go/bin/$(BINARY).bak"
-#	scp -rp $(LINUX_OUT) ucloud:/home/node/go/bin/$(BINARY).bak
-
-restart :
-	ssh ucloud "cd /home/node/go/bin/ && \mv $(BINARY).bak $(BINARY)"
-	ssh ucloud supervisorctl restart $(BINARY)
+	$(linux_producer)
+	$(linux_consumer)
 
 clean :
 	go clean -x
