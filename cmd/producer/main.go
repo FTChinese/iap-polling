@@ -7,7 +7,6 @@ import (
 	"github.com/FTChinese.com/iap-polling/pkg/config"
 	"github.com/FTChinese/go-rest/chrono"
 	"github.com/robfig/cron/v3"
-	"go.uber.org/zap"
 	"log"
 	"os"
 )
@@ -32,28 +31,10 @@ func init() {
 	config.MustSetupViper()
 }
 
-func mustGetLogger() *zap.Logger {
-	var logger *zap.Logger
-	var err error
-	if production {
-		logger, err = zap.NewProduction()
-	} else {
-		logger, err = zap.NewDevelopment()
-	}
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	return logger
-}
-
 func main() {
-	logger := mustGetLogger()
-	dbConn := config.MustDBConn(production)
-	kafkaAddr := config.MustKafkaAddress().PickSlice(production)
+	logger := config.MustGetLogger(production)
 
-	p := apple.NewProducer(dbConn, kafkaAddr, logger)
+	p := apple.NewProducer(production, logger)
 	defer p.Close()
 
 	c := cron.New(cron.WithLocation(chrono.TZShanghai))

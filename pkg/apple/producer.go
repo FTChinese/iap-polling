@@ -2,8 +2,8 @@ package apple
 
 import (
 	"context"
+	"github.com/FTChinese.com/iap-polling/pkg/config"
 	"github.com/FTChinese.com/iap-polling/pkg/db"
-	"github.com/FTChinese/go-rest/connect"
 	"github.com/jmoiron/sqlx"
 	"github.com/segmentio/kafka-go"
 	"go.uber.org/zap"
@@ -30,10 +30,10 @@ type Producer struct {
 	logger *zap.Logger
 }
 
-func NewProducer(conn connect.Connect, addr []string, logger *zap.Logger) *Producer {
+func NewProducer(prod bool, logger *zap.Logger) *Producer {
 	return &Producer{
-		db:     db.MustNewDB(conn),
-		writer: NewKafkaWriter(addr),
+		db:     db.MustNewDB(config.MustDBConn(prod)),
+		writer: NewKafkaWriter(config.MustKafkaAddress().PickSlice(prod)),
 		logger: logger,
 	}
 }
