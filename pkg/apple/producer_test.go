@@ -3,19 +3,19 @@ package apple
 import (
 	"context"
 	"fmt"
+	"testing"
+
 	"github.com/FTChinese.com/iap-polling/pkg/config"
 	"github.com/robfig/cron/v3"
 	"github.com/segmentio/kafka-go"
 	"go.uber.org/zap/zaptest"
-	"testing"
 )
 
 func Test_Produce(t *testing.T) {
 	config.MustSetupViper()
 
 	p := NewProducer(
-		config.MustDBConn(false),
-		config.MustKafkaAddress().PickSlice(false),
+		false,
 		zaptest.NewLogger(t))
 
 	defer p.Close()
