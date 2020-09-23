@@ -9,7 +9,6 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/segmentio/kafka-go"
 	"go.uber.org/zap"
-	"io/ioutil"
 	"log"
 	"net/http"
 )
@@ -98,7 +97,20 @@ func (v *Verifier) getReceipt(subs Subscription) (string, error) {
 	return receipt, nil
 }
 
-// Verify performs verification by a receipt's original transaction id.
+func (v *Verifier) Produce(key string, body []byte) error {
+	// Send the response data to kafka as is.
+	return v.writer.WriteMessages(
+		context.Background(),
+		kafka.Message{
+			Key:   []byte(key),
+			Value: body,
+		},
+	)
+}
+
+// Verify retrieves saved receipt by a subscription's
+// original transaction id, then verify it to get the latest subscription receipt,
+// and send the updated receipt data to kafka.
 func (v *Verifier) Verify(subs Subscription) error {
 	defer v.logger.Sync()
 	sugar := v.logger.Sugar()
@@ -111,22 +123,15 @@ func (v *Verifier) Verify(subs Subscription) error {
 	}
 
 	// Verify the receipt against app store.
-	resp, errs := v.vrfClient.Verify(receipt)
+	resp, body, errs := v.vrfClient.Verify(receipt)
 	if errs != nil {
 		sugar.Error(err)
 		return errs[0]
 	}
 
-	defer resp.Body.Close()
-
 	if resp.StatusCode != http.StatusOK {
 		sugar.Error("App store response status code %d", resp.StatusCode)
 		return errors.New("app store response not ok")
-	}
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return err
 	}
 
 	// Send the response data to kafka as is.
@@ -137,17 +142,6 @@ func (v *Verifier) Verify(subs Subscription) error {
 	}
 
 	return nil
-}
-
-func (v *Verifier) Produce(key string, body []byte) error {
-	// Send the response data to kafka as is.
-	return v.writer.WriteMessages(
-		context.Background(),
-		kafka.Message{
-			Key:   []byte(key),
-			Value: body,
-		},
-	)
 }
 
 func (v *Verifier) Close() {

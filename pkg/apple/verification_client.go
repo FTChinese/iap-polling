@@ -33,7 +33,7 @@ func (c VerificationClient) pickUrl() string {
 	return c.sandboxUrl
 }
 
-func (c VerificationClient) Verify(receipt string) (*http.Response, []error) {
+func (c VerificationClient) Verify(receipt string) (*http.Response, []byte, []error) {
 	payload := VerificationPayload{
 		ReceiptData:            receipt,
 		Password:               c.password,
@@ -43,5 +43,5 @@ func (c VerificationClient) Verify(receipt string) (*http.Response, []error) {
 	return fetch.New().
 		Post(c.pickUrl()).
 		SendJSON(payload).
-		End()
+		EndBytes()
 }

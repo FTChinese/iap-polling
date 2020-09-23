@@ -2,7 +2,6 @@ package apple
 
 import (
 	"github.com/FTChinese.com/iap-polling/pkg/config"
-	"io/ioutil"
 	"testing"
 )
 
@@ -17,17 +16,11 @@ func TestVerificationClient_Verify(t *testing.T) {
 	}
 
 	vrfClient := NewVerificationClient(false)
-	resp, errs := vrfClient.Verify(r)
+	resp, body, errs := vrfClient.Verify(r)
 	if errs != nil {
 		t.Error(errs)
 	}
 
-	defer resp.Body.Close()
-
-	b, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		t.Error(err)
-	}
-
-	t.Logf("%s", b)
+	t.Logf("Response status %d", resp.StatusCode)
+	t.Logf("%s", body)
 }
