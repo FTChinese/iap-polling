@@ -3,8 +3,8 @@ package apple
 import (
 	"github.com/FTChinese.com/iap-polling/pkg/config"
 	"github.com/FTChinese.com/iap-polling/pkg/fetch"
-	"io"
 	"log"
+	"net/http"
 )
 
 type VerificationClient struct {
@@ -33,21 +33,15 @@ func (c VerificationClient) pickUrl() string {
 	return c.sandboxUrl
 }
 
-func (c VerificationClient) Verify(receipt string) (io.ReadCloser, error) {
+func (c VerificationClient) Verify(receipt string) (*http.Response, []error) {
 	payload := VerificationPayload{
 		ReceiptData:            receipt,
 		Password:               c.password,
 		ExcludeOldTransactions: false,
 	}
 
-	resp, errs := fetch.New().
+	return fetch.New().
 		Post(c.pickUrl()).
 		SendJSON(payload).
 		End()
-
-	if errs != nil {
-		return nil, errs[0]
-	}
-
-	return resp.Body, nil
 }

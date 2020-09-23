@@ -34,14 +34,18 @@ func init() {
 func main() {
 	logger := config.MustGetLogger(production)
 
-	p := apple.NewProducer(production, logger)
-	defer p.Close()
+	verifier := apple.NewVerifier(production, logger)
+	defer verifier.Close()
 
 	c := cron.New(cron.WithLocation(chrono.TZShanghai))
 
 	_, err := c.AddFunc("@daily", func() {
-		p.Produce()
+		err := verifier.Start()
+		if err != nil {
+			log.Printf("Starting verifier error %v", err)
+		}
 	})
+
 	if err != nil {
 		log.Fatal(err)
 	}

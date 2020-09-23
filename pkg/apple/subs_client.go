@@ -7,8 +7,6 @@ import (
 	"github.com/FTChinese.com/iap-polling/pkg/fetch"
 	"github.com/FTChinese/go-rest/render"
 	"github.com/tidwall/gjson"
-	"io"
-	"net/http"
 )
 
 type SubsClient struct {
@@ -48,16 +46,4 @@ func (c SubsClient) GetReceipt(origTxID string) (string, error) {
 	}
 
 	return result.String(), nil
-}
-
-func (c SubsClient) SaveReceipt(body io.ReadCloser) (*http.Response, []error) {
-	url := c.baseURL + "/apple/receipt"
-
-	defer body.Close()
-
-	return fetch.New().
-		Post(url).
-		SetBearerAuth(c.key).
-		Send(body).
-		End()
 }

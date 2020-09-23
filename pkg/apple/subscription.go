@@ -11,3 +11,13 @@ type Subscription struct {
 func (s Subscription) String() string {
 	return s.OriginalTransactionID + "," + s.Environment.String()
 }
+
+// ReceiptFileName builds the file name when persisting latest receipt to disk.
+func (s Subscription) ReceiptFileName() string {
+	return s.OriginalTransactionID + "_" + s.Environment.String() + ".txt"
+}
+
+// Create key used in redis: `iap:receipt:1000000922681985-Sandbox`
+func (s Subscription) ReceiptKeyName() string {
+	return "iap:receipt:" + s.OriginalTransactionID + "-" + s.Environment.String()
+}

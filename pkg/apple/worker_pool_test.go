@@ -2,18 +2,17 @@ package apple
 
 import (
 	"github.com/FTChinese.com/iap-polling/pkg/config"
+	"go.uber.org/zap/zaptest"
 	"testing"
 )
 
-func TestSubsClient_GetReceipt(t *testing.T) {
+func TestVerifier_Start(t *testing.T) {
 	config.MustSetupViper()
 
-	client := NewSubsClient(false)
+	v := NewVerifier(false, zaptest.NewLogger(t))
 
-	r, err := client.GetReceipt("1000000619244062")
+	err := v.Start()
 	if err != nil {
 		t.Error(err)
 	}
-
-	t.Logf("%s", r)
 }

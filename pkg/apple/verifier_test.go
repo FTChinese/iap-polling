@@ -8,19 +8,7 @@ import (
 	"github.com/FTChinese.com/iap-polling/pkg/config"
 	"github.com/robfig/cron/v3"
 	"github.com/segmentio/kafka-go"
-	"go.uber.org/zap/zaptest"
 )
-
-func Test_Produce(t *testing.T) {
-	config.MustSetupViper()
-
-	p := NewProducer(
-		false,
-		zaptest.NewLogger(t))
-
-	defer p.Close()
-	p.Produce()
-}
 
 func TestNewKafkaWriter(t *testing.T) {
 	config.MustSetupViper()

@@ -17,14 +17,14 @@ func TestVerificationClient_Verify(t *testing.T) {
 	}
 
 	vrfClient := NewVerificationClient(false)
-	body, err := vrfClient.Verify(r)
-	if err != nil {
-		t.Error(err)
+	resp, errs := vrfClient.Verify(r)
+	if errs != nil {
+		t.Error(errs)
 	}
 
-	defer body.Close()
+	defer resp.Body.Close()
 
-	b, err := ioutil.ReadAll(body)
+	b, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		t.Error(err)
 	}
