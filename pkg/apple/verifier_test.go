@@ -3,12 +3,24 @@ package apple
 import (
 	"context"
 	"fmt"
+	"go.uber.org/zap/zaptest"
+	"io/ioutil"
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/FTChinese.com/iap-polling/pkg/config"
-	"github.com/robfig/cron/v3"
 	"github.com/segmentio/kafka-go"
 )
+
+func mustHomeDir() string {
+	h, err := os.UserHomeDir()
+	if err != nil {
+		panic(err)
+	}
+
+	return h
+}
 
 func TestNewKafkaWriter(t *testing.T) {
 	config.MustSetupViper()
@@ -27,19 +39,33 @@ func TestNewKafkaWriter(t *testing.T) {
 	}
 }
 
-func TestCron(t *testing.T) {
-	c := cron.New()
+func TestVerifier_getReceipt(t *testing.T) {
+	v := NewVerifier(false, zaptest.NewLogger(t))
 
-	_, err := c.AddFunc("1-59 * * * *", func() {
-		println("Hello")
+	r, err := v.getReceipt(Subscription{
+		Environment:           EnvSandbox,
+		OriginalTransactionID: "1000000619244062",
 	})
 
 	if err != nil {
 		t.Error(err)
 	}
 
-	c.Start()
+	t.Logf("Receipt: %s", r)
+}
 
-	for {
+func TestVerifier_Produce(t *testing.T) {
+	v := NewVerifier(false, zaptest.NewLogger(t))
+
+	b, err := ioutil.ReadFile(filepath.Join(mustHomeDir(), "config/apple_verified_receipt.json"))
+	if err != nil {
+		t.Error(err)
+	}
+
+	t.Logf("%s", b)
+
+	err = v.Produce("test", b)
+	if err != nil {
+		t.Error(err)
 	}
 }
