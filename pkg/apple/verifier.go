@@ -132,7 +132,7 @@ func (v *Verifier) Verify(subs Subscription) error {
 		return errs[0]
 	}
 
-	sugar.Info("App store verification response status code %d", resp.StatusCode)
+	sugar.Infof("App store verification response status code %d", resp.StatusCode)
 	if resp.StatusCode != http.StatusOK {
 		return errors.New("app store response not ok")
 	}
