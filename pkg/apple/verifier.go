@@ -116,6 +116,8 @@ func (v *Verifier) Verify(subs Subscription) error {
 	sugar := v.logger.Sugar()
 
 	// Get existing receipt first
+	sugar.Infof("Verifying original transaction id %s ...", subs.OriginalTransactionID)
+
 	receipt, err := v.getReceipt(subs)
 	if err != nil {
 		sugar.Error(err)
@@ -123,18 +125,20 @@ func (v *Verifier) Verify(subs Subscription) error {
 	}
 
 	// Verify the receipt against app store.
+	sugar.Info("Performing verification...")
 	resp, body, errs := v.vrfClient.Verify(receipt)
 	if errs != nil {
 		sugar.Error(err)
 		return errs[0]
 	}
 
+	sugar.Info("App store verification response status code %d", resp.StatusCode)
 	if resp.StatusCode != http.StatusOK {
-		sugar.Error("App store response status code %d", resp.StatusCode)
 		return errors.New("app store response not ok")
 	}
 
 	// Send the response data to kafka as is.
+	sugar.Info("Sending verified data to kafka...")
 	err = v.Produce(subs.OriginalTransactionID, body)
 
 	if err != nil {
