@@ -73,6 +73,22 @@ func TestVerifier_Produce(t *testing.T) {
 	}
 }
 
+func TestVerifier_Verify(t *testing.T) {
+	config.MustSetupViper()
+
+	v := NewVerifier(false, zaptest.NewLogger(t))
+
+	s := Subscription{
+		Environment:           EnvSandbox,
+		OriginalTransactionID: "1000000619244062",
+	}
+
+	err := v.Verify(s)
+	if err != nil {
+		t.Error(err)
+	}
+}
+
 func TestVerifier_SaveLog(t *testing.T) {
 	config.MustSetupViper()
 
