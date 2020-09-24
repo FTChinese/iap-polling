@@ -2,6 +2,7 @@ package apple
 
 import (
 	"context"
+	"github.com/FTChinese/go-rest/chrono"
 	"golang.org/x/sync/semaphore"
 	"runtime"
 )
@@ -68,6 +69,8 @@ func (v *Verifier) Start() error {
 		sugar.Infof("Failed to acquire semaphore: %v", err)
 		return nil
 	}
+
+	pollerLog.EndUTC = chrono.TimeNow()
 
 	err := v.SaveLog(pollerLog)
 	if err != nil {
