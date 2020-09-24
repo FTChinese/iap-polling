@@ -47,13 +47,13 @@ func (v *Verifier) Start() error {
 			for subs := range subsCh {
 				pollerLog.IncTotal()
 
-				//err := v.Verify(subs)
-				//if err != nil {
-				//	pollerLog.IncFailure()
-				//	sugar.Error(err)
-				//}
-
 				sugar.Infof("Will verify %v", subs)
+
+				err := v.Verify(subs)
+				if err != nil {
+					pollerLog.IncFailure()
+					sugar.Error(err)
+				}
 
 				pollerLog.IncSuccess()
 			}
@@ -74,5 +74,6 @@ func (v *Verifier) Start() error {
 		return err
 	}
 
+	sugar.Infof("Polling finished %v", pollerLog)
 	return nil
 }
