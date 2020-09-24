@@ -29,6 +29,8 @@ func (v *Verifier) Start() error {
 		}
 	}()
 
+	pollerLog := NewPollerLog()
+
 	// Compute the output using up to maxWorkers goroutines at a time.
 	for i := range out {
 		// When maxWorkers goroutines are in flight, Acquire blocks until one of the
@@ -43,12 +45,17 @@ func (v *Verifier) Start() error {
 			defer sem.Release(1)
 
 			for subs := range subsCh {
+				pollerLog.IncTotal()
+
 				//err := v.Verify(subs)
 				//if err != nil {
+				//	pollerLog.IncFailure()
 				//	sugar.Error(err)
 				//}
 
 				sugar.Infof("Will verify %v", subs)
+
+				pollerLog.IncSuccess()
 			}
 		}(i)
 	}
@@ -60,6 +67,11 @@ func (v *Verifier) Start() error {
 	if err := sem.Acquire(ctx, int64(maxWorkers)); err != nil {
 		sugar.Infof("Failed to acquire semaphore: %v", err)
 		return nil
+	}
+
+	err := v.SaveLog(pollerLog)
+	if err != nil {
+		return err
 	}
 
 	return nil

@@ -3,11 +3,14 @@ package apple
 import (
 	"context"
 	"fmt"
+	"github.com/FTChinese/go-rest/chrono"
+	"github.com/FTChinese/go-rest/rand"
 	"go.uber.org/zap/zaptest"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/FTChinese.com/iap-polling/pkg/config"
 	"github.com/segmentio/kafka-go"
@@ -55,6 +58,8 @@ func TestVerifier_getReceipt(t *testing.T) {
 }
 
 func TestVerifier_Produce(t *testing.T) {
+	config.MustSetupViper()
+
 	v := NewVerifier(false, zaptest.NewLogger(t))
 
 	b, err := ioutil.ReadFile(filepath.Join(mustHomeDir(), "config/apple_verified_receipt.json"))
@@ -62,9 +67,26 @@ func TestVerifier_Produce(t *testing.T) {
 		t.Error(err)
 	}
 
-	t.Logf("%s", b)
-
 	err = v.Produce("test", b)
+	if err != nil {
+		t.Error(err)
+	}
+}
+
+func TestVerifier_SaveLog(t *testing.T) {
+	config.MustSetupViper()
+
+	v := NewVerifier(false, zaptest.NewLogger(t))
+
+	pl := PollerLog{
+		Total:     int64(rand.IntRange(0, 200)),
+		Succeeded: int64(rand.IntRange(0, 200)),
+		Failed:    int64(rand.IntRange(0, 200)),
+		StartUTC:  chrono.TimeNow(),
+		EndUTC:    chrono.TimeFrom(time.Now().Add(1 * time.Hour)),
+	}
+
+	err := v.SaveLog(&pl)
 	if err != nil {
 		t.Error(err)
 	}

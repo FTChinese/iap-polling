@@ -23,7 +23,7 @@ func NewKafkaWriter(addr []string) *kafka.Writer {
 		Brokers:  addr,
 		Topic:    Topic,
 		Balancer: &kafka.LeastBytes{},
-		Async:    true,
+		Async:    false,
 	})
 }
 
@@ -139,6 +139,15 @@ func (v *Verifier) Verify(subs Subscription) error {
 
 	if err != nil {
 		sugar.Errorf("failed to write messages:", err)
+	}
+
+	return nil
+}
+
+func (v Verifier) SaveLog(p *PollerLog) error {
+	_, err := v.db.NamedExec(StmtSavePollerLog, p)
+	if err != nil {
+		return err
 	}
 
 	return nil
