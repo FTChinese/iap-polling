@@ -1,7 +1,7 @@
 # One of poller | migrate
 APP := poller
 
-version := `git describe --tags`
+version := `git tag -l --sort=-v:refname | head -n 1`
 build_time := `date +%FT%T%z`
 
 executable := iap-polling
@@ -29,6 +29,10 @@ dev :
 .PHONY: linux
 linux :
 	$(goos) go build -o $(linux_executable) $(ldflags) -v $(src_dir)
+
+.PHONY: tag
+tag :
+	@echo $(version)
 
 .PHONY: publish
 publish :
