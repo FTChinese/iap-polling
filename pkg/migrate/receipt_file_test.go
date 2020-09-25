@@ -6,7 +6,7 @@ func TestWalkDir(t *testing.T) {
 	ch := make(chan string)
 
 	go func() {
-		err := WalkDir(ch, NamingKindUUID)
+		err := WalkDir(ch, DirKindUUID)
 		if err != nil {
 			t.Error(err)
 			return

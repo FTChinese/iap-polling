@@ -60,7 +60,7 @@ func (w Worker) SaveMapping(m IDMapping) error {
 	return nil
 }
 
-func (w Worker) Start(k NamingKind) error {
+func (w Worker) Start(k DirKind) error {
 	fileCh := make(chan string)
 
 	ctx := context.Background()

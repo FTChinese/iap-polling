@@ -6,22 +6,24 @@ import (
 	"strings"
 )
 
-type NamingKind int
+type DirKind int
 
 const (
-	NamingKindUUID NamingKind = iota
-	NamingKindWxID
-	NamingKindDevice
+	DirKindAll DirKind = iota
+	DirKindUUID
+	DirKindWxID
+	DirKindDevice
 )
 
 var dirNames = [...]string{
+	"",
 	"user-id",
 	"wechat",
 	"device-token",
 }
 
-func (x NamingKind) String() string {
-	if x > NamingKindDevice || x < NamingKindUUID {
+func (x DirKind) String() string {
+	if x > DirKindDevice || x < DirKindAll {
 		return ""
 	}
 
@@ -47,7 +49,7 @@ type IDMapping struct {
 	AbsFilePath string
 }
 
-func NewIDMapping(fileName string, k NamingKind) IDMapping {
+func NewIDMapping(fileName string, k DirKind) IDMapping {
 	m := IDMapping{
 		TxID:        "",
 		FtcID:       null.String{},
@@ -62,11 +64,11 @@ func NewIDMapping(fileName string, k NamingKind) IDMapping {
 	id := strings.TrimSuffix(baseName, ext)
 
 	switch k {
-	case NamingKindUUID:
+	case DirKindUUID:
 		m.FtcID = null.StringFrom(id)
-	case NamingKindWxID:
+	case DirKindWxID:
 		m.UnionID = null.StringFrom(id)
-	case NamingKindDevice:
+	case DirKindDevice:
 		m.DeviceToken = null.StringFrom(id)
 	}
 

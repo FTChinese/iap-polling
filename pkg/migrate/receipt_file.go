@@ -15,7 +15,7 @@ func mustHomeDir() string {
 	return h
 }
 
-func WalkDir(ch chan<- string, k NamingKind) error {
+func WalkDir(ch chan<- string, k DirKind) error {
 	defer close(ch)
 
 	dir := filepath.Join(mustHomeDir(), "receipt", k.String())
