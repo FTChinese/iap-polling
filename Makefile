@@ -1,37 +1,48 @@
-build_dir := build
-poller_name := iap-polling
-migrate_name := iap-receipt-migrate
-
-poller_dev_out := $(build_dir)/$(poller_name)
-poller_prod_out := $(build_dir)/linux/$(poller_name)
-
-migrate_dev_out := $(build_dir)/$(migrate_name)
-migrate_prod_out := $(build_dir)/linux/$(migrate_name)
+# One of poller | migrate
+APP := poller
 
 version := `git describe --tags`
 build_time := `date +%FT%T%z`
 
+executable := iap-polling
+src_dir := ./cmd/poller/
+
+ifeq ($(APP), migrate)
+    executable := migrate-receipt
+    src_dir := ./cmd/migrate/
+endif
+
 ldflags := -ldflags "-w -s -X main.version=${version} -X main.build=${build_time}"
 
-linux_poller := GOOS=linux GOARCH=amd64 go build -o $(poller_prod_out) $(ldflags) -v ./cmd/producer/
+build_dir := build
 
-.PHONY: build poller migrate linux clean
-# Development
-build :
-	go build -o $(poller_dev_out) $(ldflags) -v ./cmd/poller/
-	go build -o $(migrate_dev_out) $(ldflags) -v ./cmd/migrate/
+dev_executable := $(build_dir)/$(executable)
+linux_executable := $(build_dir)/linux/$(executable)
 
-# Run development build
-poller :
-	./$(poller_dev_out)
+goos := GOOS=linux GOARCH=amd64
 
-migrate :
-	./$(migrate_dev_out)
+.PHONY: dev
+dev :
+	go build -o $(dev_executable) $(ldflags) -v $(src_dir)
 
 # Cross compiling linux on for dev.
+.PHONY: linux
 linux :
-	$(linux_poller)
+	$(goos) go build -o $(linux_executable) $(ldflags) -v $(src_dir)
 
+.PHONY: publish
+publish :
+	rsync -v $(linux_executable) tk11:/home/node/go/bin/
+
+.PHONY: restart
+restart :
+	ssh ucloud supervisorctl restart $(executable)
+
+.PHONY: deploy
+deploy : linux publish restart
+	@echo "deploy success"
+
+.PHONY: clean
 clean :
 	go clean -x
 	rm build/*
