@@ -9,12 +9,14 @@ import (
 
 var (
 	production bool
-	dirKind    string
+	dir        string
 )
 
 func init() {
 	flag.BoolVar(&production, "production", false, "Send verification request to production api or localhost")
-	flag.StringVar(&dirKind, "dirKind", "user-id", "Which directory to read: u, w, d")
+	flag.StringVar(&dir, "dir", "", "Which directory to read: u, w, d")
+
+	flag.Parse()
 
 	config.MustSetupViper()
 }
@@ -22,15 +24,20 @@ func init() {
 func main() {
 	worker := migrate.NewWorker(production)
 
-	var kind migrate.NamingKind
-	switch dirKind {
+	var kind migrate.DirKind
+	switch dir {
 	case "u":
-		kind = migrate.NamingKindUUID
+		kind = migrate.DirKindUUID
 	case "w":
-		kind = migrate.NamingKindWxID
+		kind = migrate.DirKindWxID
 	case "d":
-		kind = migrate.NamingKindDevice
+		kind = migrate.DirKindDevice
+	default:
+		kind = migrate.DirKindAll
 	}
+
+	log.Printf("Mirating receipts in %s", kind)
+
 	err := worker.Start(kind)
 	if err != nil {
 		log.Fatal(err)
