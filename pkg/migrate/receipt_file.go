@@ -35,6 +35,10 @@ func WalkDir(ch chan<- string, dir string) error {
 			return nil
 		}
 
+		if path == ".DS_Store" {
+			return nil
+		}
+
 		log.Println(path)
 
 		ch <- path
