@@ -4,34 +4,37 @@ APP := poller
 version := `git tag -l --sort=-v:refname | head -n 1`
 build_time := `date +%FT%T%z`
 
-app_name := iap-polling
-src_dir := ./cmd/poller/
-
-ifeq ($(APP), migrate)
-    executable := migrate-receipt
-    src_dir := ./cmd/migrate/
-endif
+app_name_poller := iap-polling
+app_name_migrate := migrate-receipt
 
 ldflags := -ldflags "-w -s -X main.version=${version} -X main.build=${build_time}"
 
 build_dir := build
 
-dev_executable := $(build_dir)/$(app_name)
-linux_executable := $(build_dir)/linux/$(app_name)
+poller_executable := $(build_dir)/$(app_name)
+poller_linux_executable := $(build_dir)/linux/$(app_name)
+poller_src_dir := ./cmd/poller/
+
+migrate_executable := $(build_dir)/$(app_name_migrate)
+migrate_src_dir := ./cmd/migrate/
 
 goos := GOOS=linux GOARCH=amd64
 
-.PHONY: dev
-dev :
-	go build -o $(dev_executable) $(ldflags) -v $(src_dir)
+.PHONY: build-poller
+build-poller :
+	go build -o $(poller_executable) $(ldflags) -v $(poller_src_dir)
 
+.PHONY: build-migrate
+build-migrate :
+	go build -o $(migrate_executable) $(ldflags) -v $(migrate_src_dir)
+
+.PHONY: run-migrate
 run-migrate :
-	./$(build_dir)/migrate-receipt -production -dir="iap_receipts"
+	./$(migrate_executable) -production -dir="iap_receipts"
 
-# Cross compiling linux on for dev.
-.PHONY: linux
-linux :
-	$(goos) go build -o $(linux_executable) $(ldflags) -v $(src_dir)
+.PHONY: linux-poller
+linux-poller :
+	$(goos) go build -o $(poller_linux_executable) $(ldflags) -v $(poller_src_dir)
 
 .PHONY: tag
 tag :
@@ -39,17 +42,17 @@ tag :
 
 .PHONY: publish
 publish :
-	rsync -v $(linux_executable) tk11:/home/node/go/bin/
+	rsync -v $(poller_linux_executable) tk11:/home/node/go/bin/
 
 .PHONY: restart
 restart :
-	ssh ucloud supervisorctl restart $(app_name)
+	ssh ucloud supervisorctl restart $(app_name_poller)
 
 .PHONY: deploy
-deploy : linux publish restart
+deploy : linux-poller publish restart
 	@echo "deploy success"
 
 .PHONY: clean
 clean :
 	go clean -x
-	rm build/*
+	rm -rf build/*
