@@ -4,7 +4,7 @@ APP := poller
 version := `git tag -l --sort=-v:refname | head -n 1`
 build_time := `date +%FT%T%z`
 
-executable := iap-polling
+app_name := iap-polling
 src_dir := ./cmd/poller/
 
 ifeq ($(APP), migrate)
@@ -16,14 +16,17 @@ ldflags := -ldflags "-w -s -X main.version=${version} -X main.build=${build_time
 
 build_dir := build
 
-dev_executable := $(build_dir)/$(executable)
-linux_executable := $(build_dir)/linux/$(executable)
+dev_executable := $(build_dir)/$(app_name)
+linux_executable := $(build_dir)/linux/$(app_name)
 
 goos := GOOS=linux GOARCH=amd64
 
 .PHONY: dev
 dev :
 	go build -o $(dev_executable) $(ldflags) -v $(src_dir)
+
+run-migrate :
+	./$(build_dir)/migrate-receipt -production -dir="iap_receipts"
 
 # Cross compiling linux on for dev.
 .PHONY: linux
@@ -40,7 +43,7 @@ publish :
 
 .PHONY: restart
 restart :
-	ssh ucloud supervisorctl restart $(executable)
+	ssh ucloud supervisorctl restart $(app_name)
 
 .PHONY: deploy
 deploy : linux publish restart
