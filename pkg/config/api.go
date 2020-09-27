@@ -25,7 +25,7 @@ func MustAPIKey() API {
 }
 
 func MustAPIBaseURL() API {
-	prodURL := viper.GetString("api_url.sub_sandbox")
+	prodURL := viper.GetString("api_url.subscription_v1")
 
 	return API{
 		Dev:  "http://localhost:8200",
