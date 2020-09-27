@@ -1,12 +1,15 @@
 package migrate
 
-import "testing"
+import (
+	"runtime"
+	"testing"
+)
 
 func TestWalkDir(t *testing.T) {
 	ch := make(chan string)
 
 	go func() {
-		err := WalkDir(ch, DirKindUUID)
+		err := WalkDir(ch, "iap_receipts")
 		if err != nil {
 			t.Error(err)
 			return
@@ -16,4 +19,8 @@ func TestWalkDir(t *testing.T) {
 	for p := range ch {
 		t.Logf("%s\n", p)
 	}
+}
+
+func TestMaxWorkers(t *testing.T) {
+	t.Logf("%d", runtime.GOMAXPROCS(0))
 }

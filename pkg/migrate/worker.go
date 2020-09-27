@@ -10,11 +10,10 @@ import (
 	"golang.org/x/sync/semaphore"
 	"io/ioutil"
 	"log"
-	"runtime"
 )
 
 var (
-	maxWorkers = runtime.GOMAXPROCS(0)
+	maxWorkers = 16
 	sem        = semaphore.NewWeighted(int64(maxWorkers))
 )
 
