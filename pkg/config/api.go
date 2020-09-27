@@ -36,10 +36,10 @@ func MustAPIBaseURL() API {
 
 func (k API) Pick(prod bool) string {
 	if prod {
-		log.Printf("Using product %s", k.name)
+		log.Printf("Using production %s %s", k.name, k.Prod)
 		return k.Prod
 	}
 
-	log.Printf("Using development %s", k.name)
+	log.Printf("Using development %s %s", k.name, k.Dev)
 	return k.Dev
 }
