@@ -31,8 +31,11 @@ func NewWorker(prodApi bool) Worker {
 }
 
 func (w Worker) Verify(f string) (apple.Subscription, error) {
+	log.Printf("Verify: start verifying %s", f)
+
 	receipt, err := ioutil.ReadFile(f)
 	if err != nil {
+		log.Printf("Veify: error reading receipt %s: %v", f, err)
 		return apple.Subscription{}, err
 	}
 
@@ -41,10 +44,11 @@ func (w Worker) Verify(f string) (apple.Subscription, error) {
 		return apple.Subscription{}, err
 	}
 
-	log.Printf("%s", body)
+	log.Printf("Verify: subscription response %s", body)
 
 	var s apple.Subscription
 	if err := json.Unmarshal(body, &s); err != nil {
+		log.Printf("Verify: unmarshal subscription error %v", err)
 		return apple.Subscription{}, err
 	}
 
@@ -60,13 +64,13 @@ func (w Worker) SaveMapping(m IDMapping) error {
 	return nil
 }
 
-func (w Worker) Start(k DirKind) error {
+func (w Worker) Start(dir string) error {
 	fileCh := make(chan string)
 
 	ctx := context.Background()
 
 	go func() {
-		err := WalkDir(fileCh, k)
+		err := WalkDir(fileCh, dir)
 		if err != nil {
 			log.Println(err)
 		}
@@ -78,25 +82,11 @@ func (w Worker) Start(k DirKind) error {
 			break
 		}
 
-		m := NewIDMapping(f, k)
-
-		go func(m IDMapping) {
+		go func(filename string) {
 			defer sem.Release(1)
 
-			subs, err := w.Verify(m.AbsFilePath)
-
-			if err != nil {
-				log.Println(err)
-				return
-			}
-
-			m.TxID = subs.OriginalTransactionID
-
-			err = w.SaveMapping(m)
-			if err != nil {
-				log.Println(err)
-			}
-		}(m)
+			_, _ = w.Verify(filename)
+		}(f)
 	}
 
 	if err := sem.Acquire(ctx, int64(maxWorkers)); err != nil {

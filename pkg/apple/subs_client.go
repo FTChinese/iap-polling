@@ -7,6 +7,7 @@ import (
 	"github.com/FTChinese.com/iap-polling/pkg/fetch"
 	"github.com/FTChinese/go-rest/render"
 	"github.com/tidwall/gjson"
+	"log"
 )
 
 type SubsClient struct {
@@ -52,6 +53,7 @@ func (c SubsClient) GetReceipt(origTxID string) (string, error) {
 
 // VerifyReceipt send a receipt to subscription api to get
 // Subscription response.
+// Treat http status code above 400 as error.
 func (c SubsClient) VerifyReceipt(receipt string) ([]byte, error) {
 	url := c.baseURL + "/apple/subs"
 
@@ -63,15 +65,18 @@ func (c SubsClient) VerifyReceipt(receipt string) ([]byte, error) {
 		}).
 		EndBytes()
 	if errs != nil {
+		log.Printf("VerifyReceipt: error %v", errs)
 		return nil, errs[0]
 	}
 
 	if resp.StatusCode >= 400 {
+
 		var respErr render.ResponseError
 		if err := json.Unmarshal(b, &respErr); err != nil {
 			return nil, err
 		}
 
+		log.Printf("VerifyReceipt: subscription api reponse error %v", respErr)
 		return nil, &respErr
 	}
 

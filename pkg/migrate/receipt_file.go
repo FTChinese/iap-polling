@@ -15,10 +15,10 @@ func mustHomeDir() string {
 	return h
 }
 
-func WalkDir(ch chan<- string, k DirKind) error {
+func WalkDir(ch chan<- string, dir string) error {
 	defer close(ch)
 
-	dir := filepath.Join(mustHomeDir(), "receipt", k.String())
+	dir = filepath.Join(mustHomeDir(), dir)
 
 	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {

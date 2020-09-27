@@ -8,13 +8,13 @@ import (
 )
 
 var (
-	production bool
+	production bool // Determine whether hit production api.
 	dir        string
 )
 
 func init() {
 	flag.BoolVar(&production, "production", false, "Send verification request to production api or localhost")
-	flag.StringVar(&dir, "dir", "", "Which directory to read: u, w, d")
+	flag.StringVar(&dir, "dir", "", "Which directory to read receipts")
 
 	flag.Parse()
 
@@ -24,21 +24,9 @@ func init() {
 func main() {
 	worker := migrate.NewWorker(production)
 
-	var kind migrate.DirKind
-	switch dir {
-	case "u":
-		kind = migrate.DirKindUUID
-	case "w":
-		kind = migrate.DirKindWxID
-	case "d":
-		kind = migrate.DirKindDevice
-	default:
-		kind = migrate.DirKindAll
-	}
+	log.Printf("Migrating receipts in %s", dir)
 
-	log.Printf("Mirating receipts in %s", kind)
-
-	err := worker.Start(kind)
+	err := worker.Start(dir)
 	if err != nil {
 		log.Fatal(err)
 	}
