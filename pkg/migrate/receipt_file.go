@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 func mustHomeDir() string {
@@ -26,6 +27,11 @@ func WalkDir(ch chan<- string, dir string) error {
 		}
 
 		if info.IsDir() {
+			return nil
+		}
+
+		// Ignore sandbox receipt
+		if strings.Contains(path, "Sandbox") {
 			return nil
 		}
 
