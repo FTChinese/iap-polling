@@ -3,8 +3,10 @@ package apple
 import (
 	"context"
 	"fmt"
+	"github.com/FTChinese.com/iap-polling/pkg/db"
 	"github.com/FTChinese/go-rest/chrono"
 	"github.com/FTChinese/go-rest/rand"
+	"github.com/go-redis/redis/v8"
 	"go.uber.org/zap/zaptest"
 	"io/ioutil"
 	"os"
@@ -39,6 +41,29 @@ func TestNewKafkaWriter(t *testing.T) {
 		if err != nil {
 			fmt.Println(err)
 		}
+	}
+}
+
+func TestProdKafka(t *testing.T) {
+	config.MustSetupViper()
+
+	v := &Verifier{
+		db:         db.MustNewDB(config.MustDBConn(false)),
+		vrfClient:  NewVerificationClient(true),
+		subsClient: NewSubsClient(false),
+		rdb: redis.NewClient(&redis.Options{
+			Addr:     config.MustRedisAddress().Pick(false),
+			Password: "",
+			DB:       0,
+		}),
+		writer: NewKafkaWriter(config.MustKafkaAddress().PickSlice(true)),
+		logger: zaptest.NewLogger(t),
+		ctx:    context.Background(),
+	}
+
+	err := v.Start()
+	if err != nil {
+		t.Error(err)
 	}
 }
 
