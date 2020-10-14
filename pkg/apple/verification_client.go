@@ -14,6 +14,8 @@ type VerificationClient struct {
 	password   string
 }
 
+// NewVerificationClient creates a new client used to send request to app store endpoint.
+// If `prod` is true, use app store production endpoint; otherwise use sandbox endpoint.
 func NewVerificationClient(prod bool) VerificationClient {
 	return VerificationClient{
 		production: prod,

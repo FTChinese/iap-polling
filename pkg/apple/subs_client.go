@@ -15,6 +15,8 @@ type SubsClient struct {
 	baseURL string
 }
 
+// NewSubsClient create a new SubsClient used to access subscription api.
+// If prod is true, visits online production server; otherwise uses development server.
 func NewSubsClient(prod bool) SubsClient {
 
 	return SubsClient{
