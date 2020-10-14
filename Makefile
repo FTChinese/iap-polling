@@ -11,8 +11,8 @@ ldflags := -ldflags "-w -s -X main.version=${version} -X main.build=${build_time
 
 build_dir := build
 
-poller_executable := $(build_dir)/$(app_name)
-poller_linux_executable := $(build_dir)/linux/$(app_name)
+poller_executable := $(build_dir)/$(app_name_poller)
+poller_linux_executable := $(build_dir)/linux/$(app_name_poller)
 poller_src_dir := ./cmd/poller/
 
 migrate_executable := $(build_dir)/$(app_name_migrate)
@@ -36,17 +36,13 @@ run-migrate :
 linux-poller :
 	$(goos) go build -o $(poller_linux_executable) $(ldflags) -v $(poller_src_dir)
 
-.PHONY: tag
-tag :
-	@echo $(version)
-
 .PHONY: publish
 publish :
 	rsync -v $(poller_linux_executable) tk11:/home/node/go/bin/
 
 .PHONY: restart
 restart :
-	ssh ucloud supervisorctl restart $(app_name_poller)
+	ssh tk11 supervisorctl restart $(app_name_poller)
 
 .PHONY: deploy
 deploy : linux-poller publish restart
