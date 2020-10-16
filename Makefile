@@ -40,12 +40,9 @@ linux-poller :
 publish :
 	rsync -v $(poller_linux_executable) tk11:/home/node/go/bin/
 
-.PHONY: restart
-restart :
-	ssh tk11 supervisorctl restart $(app_name_poller)
-
 .PHONY: deploy
-deploy : linux-poller publish restart
+deploy : linux-poller publish
+	ssh tk11 supervisorctl restart $(app_name_poller)
 	@echo "deploy success"
 
 .PHONY: clean
