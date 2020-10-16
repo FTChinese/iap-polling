@@ -15,10 +15,12 @@ var (
 	version    string
 	build      string
 	production bool
+	run        bool
 )
 
 func init() {
 	flag.BoolVar(&production, "production", false, "Connect to production MySQL database if present. Default to localhost.")
+	flag.BoolVar(&run, "run", false, "Run immediately")
 	var v = flag.Bool("v", false, "print current version")
 
 	flag.Parse()
@@ -36,6 +38,14 @@ func main() {
 
 	verifier := apple.NewVerifier(production, logger)
 	defer verifier.Close()
+
+	if run {
+		err := verifier.Start()
+		if err != nil {
+			log.Printf("Running verifier error %v", err)
+		}
+		return
+	}
 
 	c := cron.New(cron.WithLocation(chrono.TZShanghai))
 
