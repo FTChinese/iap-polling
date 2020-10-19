@@ -7,8 +7,8 @@ pipeline {
         stage('Build') {
             steps {
                 sh 'make install-go'
-                sh 'make build'
-                archiveArtifacts artifacts: 'build/*', fingerprint: true
+                sh 'make build MODE=production'
+                archiveArtifacts artifacts: 'build/production/*', fingerprint: true
             }
         }
         stage('Deploy') {
@@ -19,7 +19,7 @@ pipeline {
             }
             steps {
                 sh 'make config'
-                sh 'make publish'
+                sh 'make publish MODE=production'
                 sh 'make restart'
             }
         }

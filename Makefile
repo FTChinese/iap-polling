@@ -1,5 +1,6 @@
 # One of poller | migrate
 APP := poller
+MODE := development
 
 version := `git tag -l --sort=-v:refname | head -n 1`
 build_time := `date +%FT%T%z`
@@ -10,17 +11,20 @@ ldflags := -ldflags "-w -s -X main.version=${version} -X main.build=${build_time
 
 build_dir := build
 
-executable := $(build_dir)/$(app_name)
-linux_executable := $(build_dir)/linux/$(app_name)
+executable := $(build_dir)/$(MODE)/$(app_name)
 src_dir := ./cmd/poller/
 
 config_file_name := api.toml
-goos := GOOS=linux GOARCH=amd64
+
+ifeq ($(MODE),production)
+	goos := GOOS=linux GOARCH=amd64
+endif
+
 go_version := go1.15
 
-.PHONY: dev
-dev :
-	go build -o $(executable) $(ldflags) -v $(src_dir)
+.PHONY: build
+build :
+	$(goos) go build -o $(executable) $(ldflags) -v $(src_dir)
 
 .PHONY: run
 run :
@@ -30,10 +34,6 @@ run :
 install-go:
 	gvm install $(go_version)
 	gvm use $(go_version)
-
-.PHONY: build
-build :
-	$(goos) go build -o $(linux_executable) $(ldflags) -v $(src_dir)
 
 .PHONY: config
 config :
@@ -53,7 +53,7 @@ restart :
 
 .PHONY: deploy
 deploy : build
-	rsync -v $(linux_executable) tk11:/home/node/go/bin/
+	rsync -v $(executable) tk11:/home/node/go/bin/
 	ssh tk11 supervisorctl restart $(app_name)
 	@echo "deploy success"
 
