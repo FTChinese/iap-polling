@@ -24,14 +24,6 @@ func MustAddress(key string) Address {
 	return a
 }
 
-func MustKafkaAddress() Address {
-	return MustAddress("kafka")
-}
-
-func MustRedisAddress() Address {
-	return MustAddress("redis")
-}
-
 func (a Address) Pick(prod bool) string {
 	if prod {
 		log.Printf("Using production %s", a.key)

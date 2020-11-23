@@ -2,8 +2,9 @@ package main
 
 import (
 	"flag"
+	"github.com/FTChinese.com/iap-polling/pkg/apple"
 	"github.com/FTChinese.com/iap-polling/pkg/config"
-	"github.com/FTChinese.com/iap-polling/pkg/migrate"
+	"go.uber.org/zap"
 	"log"
 )
 
@@ -22,11 +23,16 @@ func init() {
 }
 
 func main() {
-	worker := migrate.NewWorker(production)
+	logger, err := zap.NewProduction()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	worker := apple.NewWorker(production, logger)
 
 	log.Printf("Migrating receipts in %s", dir)
 
-	err := worker.Start(dir)
+	err = worker.Start(dir)
 	if err != nil {
 		log.Fatal(err)
 	}

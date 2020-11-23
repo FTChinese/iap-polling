@@ -1,4 +1,4 @@
-package migrate
+package apple
 
 import (
 	"runtime"
@@ -6,15 +6,7 @@ import (
 )
 
 func TestWalkDir(t *testing.T) {
-	ch := make(chan string)
-
-	go func() {
-		err := WalkDir(ch, "iap_receipts")
-		if err != nil {
-			t.Error(err)
-			return
-		}
-	}()
+	ch := WalkReceipts("iap_receipts")
 
 	for p := range ch {
 		t.Logf("%s\n", p)

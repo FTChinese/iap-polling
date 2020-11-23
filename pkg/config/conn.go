@@ -34,12 +34,3 @@ func MustDBConn(prod bool) connect.Connect {
 
 	return conn
 }
-
-func MustHanqiConn() connect.Connect {
-	conn, err := GetConn("email.hanqi")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	return conn
-}
