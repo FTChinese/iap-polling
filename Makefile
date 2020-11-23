@@ -1,26 +1,14 @@
-# One of poller | migrate
-APP := poller
-MODE := development
-
 version := `git tag -l --sort=-v:refname | head -n 1`
 build_time := `date +%FT%T%z`
 
-app_name := iap-polling
+app_name := iap-migrate
 
 ldflags := -ldflags "-w -s -X main.version=${version} -X main.build=${build_time}"
 
 build_dir := build
 
-executable := $(build_dir)/$(MODE)/$(app_name)
-src_dir := ./cmd/poller/
-
-config_file_name := api.toml
-
-ifeq ($(MODE),production)
-	goos := GOOS=linux GOARCH=amd64
-endif
-
-go_version := go1.15
+executable := $(build_dir)/$(app_name)
+src_dir := .
 
 .PHONY: build
 build :
@@ -29,33 +17,6 @@ build :
 .PHONY: run
 run :
 	./$(executable)
-
-.PHONY: install-go
-install-go:
-	gvm install $(go_version)
-	gvm use $(go_version)
-
-.PHONY: config
-config :
-	rsync -v tk11:/home/node/config/$(config_file_name) ./$(build_dir)
-	rsync -v ./$(build_dir)/$(config_file_name) ucloud:/home/node/config
-
-.PHONY: publish
-publish :
-	ssh ucloud "rm -f /home/node/go/bin/$(app_name).bak"
-	rsync -v $(executable) bj32:/home/node
-	ssh bj32 "rsync -v /home/node/$(app_name) ucloud:/home/node/go/bin/$(app_name).bak"
-
-.PHONY: restart
-restart :
-	ssh ucloud "cd /home/node/go/bin/ && \mv $(app_name).bak $(app_name)"
-	ssh ucloud supervisorctl restart $(app_name)
-
-.PHONY: deploy
-deploy : build
-	rsync -v $(executable) tk11:/home/node/go/bin/
-	ssh tk11 supervisorctl restart $(app_name)
-	@echo "deploy success"
 
 .PHONY: clean
 clean :

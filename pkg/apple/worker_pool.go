@@ -54,9 +54,9 @@ func (v *Verifier) Start() error {
 				if err != nil {
 					pollerLog.IncFailure()
 					sugar.Error(err)
+				} else {
+					pollerLog.IncSuccess()
 				}
-
-				pollerLog.IncSuccess()
 			}
 		}(i)
 	}

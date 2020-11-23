@@ -73,7 +73,7 @@ func (v *Verifier) LoadSubs(ch chan<- Subscription) error {
 			continue
 		}
 
-		sugar.Infof("%#v\n", subs)
+		sugar.Infof("%v\n", subs)
 
 		ch <- subs
 	}
