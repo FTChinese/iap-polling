@@ -28,7 +28,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	worker := apple.NewWorker(production, logger)
+	worker := apple.NewReceiptMigration(production, logger)
 
 	log.Printf("Migrating receipts in %s", dir)
 

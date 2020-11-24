@@ -14,19 +14,19 @@ var (
 	sem        = semaphore.NewWeighted(int64(maxWorkers))
 )
 
-type Worker struct {
+type ReceiptMigration struct {
 	api    SubsAPI
 	logger *zap.Logger
 }
 
-func NewWorker(prod bool, logger *zap.Logger) Worker {
-	return Worker{
+func NewReceiptMigration(prod bool, logger *zap.Logger) ReceiptMigration {
+	return ReceiptMigration{
 		api:    NewSubsAPI(prod),
 		logger: logger,
 	}
 }
 
-func (w Worker) Verify(f string) (Subscription, error) {
+func (m ReceiptMigration) Verify(f string) (Subscription, error) {
 	log.Printf("Verify: start verifying %s", f)
 
 	receipt, err := ioutil.ReadFile(f)
@@ -35,7 +35,7 @@ func (w Worker) Verify(f string) (Subscription, error) {
 		return Subscription{}, err
 	}
 
-	body, err := w.api.VerifyReceipt(string(receipt))
+	body, err := m.api.VerifyReceipt(string(receipt))
 	if err != nil {
 		return Subscription{}, err
 	}
@@ -51,7 +51,7 @@ func (w Worker) Verify(f string) (Subscription, error) {
 	return s, nil
 }
 
-func (w Worker) Start(dir string) error {
+func (m ReceiptMigration) Start(dir string) error {
 
 	ctx := context.Background()
 
@@ -66,7 +66,7 @@ func (w Worker) Start(dir string) error {
 		go func(filename string) {
 			defer sem.Release(1)
 
-			_, _ = w.Verify(filename)
+			_, _ = m.Verify(filename)
 		}(f)
 	}
 

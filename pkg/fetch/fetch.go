@@ -195,6 +195,18 @@ func (f *Fetch) EndBytes() (*http.Response, []byte, []error) {
 	return resp, b, nil
 }
 
+func (f *Fetch) EndRaw() (RawResponse, []error) {
+	resp, b, err := f.EndBytes()
+	if err != nil {
+		return RawResponse{}, err
+	}
+
+	return RawResponse{
+		StatusCode: resp.StatusCode,
+		Body:       b,
+	}, nil
+}
+
 func (f *Fetch) EndJSON(v interface{}) []error {
 	resp, errs := f.End()
 	if errs != nil {

@@ -26,12 +26,12 @@ func NewSubsAPI(prod bool) SubsAPI {
 // VerifyReceipt send a receipt to subscription api to get
 // Subscription response.
 // Treat http status code above 400 as error.
-func (c SubsAPI) VerifyReceipt(receipt string) ([]byte, error) {
-	url := c.baseURL + "/apple/subs"
+func (s SubsAPI) VerifyReceipt(receipt string) ([]byte, error) {
+	url := s.baseURL + "/apple/subs"
 
 	resp, b, errs := fetch.New().
 		Post(url).
-		SetBearerAuth(c.key).
+		SetBearerAuth(s.key).
 		SendJSON(map[string]string{
 			"receiptData": receipt,
 		}).
@@ -53,4 +53,21 @@ func (c SubsAPI) VerifyReceipt(receipt string) ([]byte, error) {
 	}
 
 	return b, nil
+}
+
+func (s SubsAPI) Link(l LinkInput) (fetch.RawResponse, error) {
+	url := s.baseURL + "/apple/link"
+
+	rawRes, errs := fetch.New().
+		Post(url).
+		SetBearerAuth(s.key).
+		SendJSON(l).
+		EndRaw()
+
+	if errs != nil {
+		log.Printf("Link: error %v", errs)
+		return fetch.RawResponse{}, errs[0]
+	}
+
+	return rawRes, nil
 }
