@@ -31,12 +31,8 @@ build :
 publish :
 	rsync -v $(linux_exec) tk11:/home/node/go/bin/
 
-.PHONY: restart
-restart :
-	ssh tk11 supervisorctl restart $(app_name)
-
 .PHONY: deploy
-deploy : build publish restart
+deploy : build publish
 	@echo "Deploy finished"
 
 .PHONY: clean
