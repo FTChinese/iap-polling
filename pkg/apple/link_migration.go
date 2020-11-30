@@ -3,7 +3,6 @@ package apple
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"github.com/FTChinese.com/iap-polling/pkg/config"
 	"github.com/FTChinese.com/iap-polling/pkg/db"
 	"github.com/FTChinese/go-rest/render"
@@ -16,7 +15,6 @@ import (
 type LinkInput struct {
 	FtcID        string `json:"ftcId" db:"ftc_user_id"`
 	OriginalTxID string `json:"originalTxId" db:"original_transaction_id"`
-	Force        bool   `json:"force"` // If FtcID is already linked to another apple id, it is not allowed to use this OriginalTxId's subscription unless Force is true.
 }
 
 type LinkMigration struct {
@@ -26,23 +24,11 @@ type LinkMigration struct {
 }
 
 const stmtLinkedID = `
-SELECT i.vip_id AS ftc_user_id,
-    i.transaction_id AS original_transaction_id
-FROM premium.ftc_vip_ios AS i
-    LEFT JOIN (
-        SELECT COUNT(*) AS tx_count,
-            transaction_id
-        FROM premium.ftc_vip_ios
-        WHERE vip_id_alias IS NULL 
-            AND transaction_id IS NOT NULL
-            AND transaction_id != ''
-        GROUP BY transaction_id
-    ) AS dup
-    ON i.transaction_id = dup.transaction_id
-WHERE i.vip_id_alias IS NULL 
-    AND i.transaction_id IS NOT NULL
-    AND i.transaction_id != ''
-    AND dup.tx_count = 1`
+SELECT original_transaction_id,
+	ftc_id AS ftc_user_id
+FROM premium.apple_id_mapping
+WHERE ftc_id IS NOT NULL
+	AND original_transaction_id != ''`
 
 const stmtLinkCol = `
 error_field = :error_field,
@@ -67,10 +53,10 @@ type LinkErrLog struct {
 	Message string `db:"error_message"`
 }
 
-func NewLinkMigration(prod bool, logger *zap.Logger) LinkMigration {
+func NewLinkMigration(logger *zap.Logger) LinkMigration {
 	return LinkMigration{
-		db:     db.MustNewDB(config.MustDBConn(prod)),
-		api:    NewSubsAPI(prod),
+		db:     db.MustNewDB(config.MustDBConn(false)),
+		api:    NewSubsAPI(true),
 		logger: logger,
 	}
 }
@@ -130,9 +116,7 @@ func (m LinkMigration) link(input LinkInput) error {
 		return nil
 	}
 
-	if resp.StatusCode != 422 {
-		return fmt.Errorf("link response error status: %d", resp.StatusCode)
-	}
+	sugar.Infof("Link response error %d, %s", resp.StatusCode, resp.Body)
 
 	var respErr render.ResponseError
 	if err := json.Unmarshal(resp.Body, &respErr); err != nil {
@@ -140,10 +124,17 @@ func (m LinkMigration) link(input LinkInput) error {
 		return err
 	}
 
+	if respErr.Invalid != nil {
+		return m.saveLinkErrLog(LinkErrLog{
+			LinkInput: input,
+			Field:     respErr.Invalid.Field,
+			Code:      string(respErr.Invalid.Code),
+			Message:   respErr.Message,
+		})
+	}
+
 	return m.saveLinkErrLog(LinkErrLog{
 		LinkInput: input,
-		Field:     respErr.Invalid.Field,
-		Code:      string(respErr.Invalid.Code),
 		Message:   respErr.Message,
 	})
 }
